@@ -63,16 +63,8 @@ class Game:
         if not self.username:
             self.username = "Player1"
         
-        # Update snake color
-        self.snake.color = self.color_picker.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(-1,-1))) # Hacky way to get current color if not clicked? No, color picker stores state.
-        # Actually ColorPicker needs to expose selected color logic better or we just read it.
-        # Let's fix ColorPicker usage. It has a default.
-        # We need to make sure we grab the selected color.
-        # In UI update loop we click it.
-        # Let's just read it from the object.
-        pass # Logic handled in loop
-        
-        self.snake = Snake(self.snake_color) # Re-init snake with chosen color
+        # self.snake_color is already updated by the event loop
+        self.snake = Snake(self.snake_color) 
         self.snake.reset()
         self.food.randomize_position(self.snake.positions)
         self.state = "PLAYING"
@@ -86,6 +78,7 @@ class Game:
         self.state = "MENU"
 
     def handle_events(self):
+        mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -93,12 +86,13 @@ class Game:
             
             if self.state == "MENU":
                 self.username_input.handle_event(event)
-                self.theme_btn.check_hover(pygame.mouse.get_pos())
+                
+                self.theme_btn.check_hover(mouse_pos)
                 self.theme_btn.handle_event(event)
                 
                 # Difficulty selection
                 for btn in self.diff_btns:
-                    btn.check_hover(pygame.mouse.get_pos())
+                    btn.check_hover(mouse_pos)
                     action = btn.handle_event(event)
                     
                 # Color Picker
@@ -106,14 +100,11 @@ class Game:
                 if new_color:
                     self.snake_color = new_color
                 
-                self.start_btn.check_hover(pygame.mouse.get_pos())
+                self.start_btn.check_hover(mouse_pos)
                 self.start_btn.handle_event(event)
 
             elif self.state == "PLAYING":
-                # Snake controls are handled in update, but we need to pass events?
-                # Actually Snake.handle_keys() uses pygame.key.get_pressed(), which is continuous.
-                # But for precise turning we might want KEYDOWN events to buffer turns.
-                # For now get_pressed is okay for simple snake, but KEYDOWN is better for "Solid".
+                # Snake controls
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP: self.snake.turn((0, -1))
                     elif event.key == pygame.K_DOWN: self.snake.turn((0, 1))
@@ -121,9 +112,9 @@ class Game:
                     elif event.key == pygame.K_RIGHT: self.snake.turn((1, 0))
 
             elif self.state in ["GAME_OVER", "VICTORY"]:
-                self.restart_btn.check_hover(pygame.mouse.get_pos())
+                self.restart_btn.check_hover(mouse_pos)
                 self.restart_btn.handle_event(event)
-                self.menu_btn.check_hover(pygame.mouse.get_pos())
+                self.menu_btn.check_hover(mouse_pos)
                 self.menu_btn.handle_event(event)
 
     def update(self):

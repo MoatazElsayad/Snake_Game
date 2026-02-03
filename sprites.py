@@ -6,7 +6,9 @@ class Snake:
     def __init__(self, color=GREEN):
         self.length = 1
         self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
-        self.direction = (0, 0)  # Start stationary or define a start direction
+        self.direction = (0, 0)
+        self.last_direction = (0, 0)
+        self.next_turns = []
         self.color = color
         self.score = 0
         self.alive = True
@@ -16,13 +18,31 @@ class Snake:
         return self.positions[0]
 
     def turn(self, point):
-        # Prevent 180 degree turns
-        if self.length > 1 and (point[0] * -1, point[1] * -1) == self.direction:
-            return
+        # Determine the direction we should check against
+        if self.next_turns:
+            check_dir = self.next_turns[-1]
+        elif self.direction != (0, 0):
+             check_dir = self.direction
         else:
-            self.direction = point
+             check_dir = self.last_direction
+
+        # Prevent 180 degree turns
+        if (point[0] * -1, point[1] * -1) == check_dir:
+            return
+        
+        # Don't queue the same direction twice
+        if point == check_dir:
+            return
+
+        # Limit queue size to prevent input lag buildup
+        if len(self.next_turns) < 3:
+            self.next_turns.append(point)
 
     def move(self):
+        if self.next_turns:
+            self.direction = self.next_turns.pop(0)
+            self.last_direction = self.direction
+
         if self.direction == (0, 0):
             return
 
@@ -50,7 +70,9 @@ class Snake:
     def reset(self):
         self.length = 1
         self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
-        self.direction = (0, 0) # Stationary until key press
+        self.direction = (0, 0)
+        self.last_direction = (0, 0)
+        self.next_turns = []
         self.score = 0
         self.alive = True
         self.grow_pending = 0
